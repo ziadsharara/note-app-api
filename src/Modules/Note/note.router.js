@@ -5,14 +5,15 @@ import {
   allNotes,
   userNote,
 } from './note.controller.js';
+import { isAuthenticated } from './../../Middleware/auth.middleware.js';
 
 const router = Router();
 
 // create note
-router.post('/', createNote);
+router.post('/', isAuthenticated, createNote);
 
 // update
-router.patch('/:id', updateNote);
+router.patch('/:id', isAuthenticated, updateNote);
 
 // all notes
 router.get('/', allNotes);

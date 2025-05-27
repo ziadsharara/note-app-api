@@ -3,7 +3,8 @@ import { User } from './../../../DB/Models/user.model.js';
 
 export const createNote = async (req, res) => {
   // data
-  const { content, userId } = req.body;
+  const { content } = req.body;
+  const userId = req.user._id;
 
   // check user
   const user = await User.findById(userId);
@@ -17,8 +18,9 @@ export const createNote = async (req, res) => {
 
 export const updateNote = async (req, res) => {
   // data >> id, isCompleted
-  const { id } = req.params;
-  const { isCompleted, userId } = req.body;
+  const { id } = req.params; // note id
+  const { isCompleted } = req.body;
+  const userId = req.user._id;
 
   // check if user exists
   const user = await User.findById(userId);

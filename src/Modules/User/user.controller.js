@@ -1,4 +1,6 @@
 import { User } from './../../../DB/Models/user.model.js';
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export const signup = async (req, res, next) => {
   try {
@@ -11,16 +13,22 @@ export const signup = async (req, res, next) => {
     }
 
     // check email
-    // const isUser = await User.findOne({ email });
-    // if (isUser) {
-    //   return res.json({
-    //     success: false,
-    //     message: 'Email must be unique!',
-    //   });
-    // }
+    const isUser = await User.findOne({ email });
+    if (isUser) {
+      return res.json({
+        success: false,
+        message: 'Email must be unique!',
+      });
+    }
+
+    // hash password
+    const hashPassword = bcryptjs.hashSync(
+      password,
+      parseInt(process.env.SALTROUNDS)
+    );
 
     // Create
-    const user = await User.create({ email, password, name });
+    const user = await User.create({ email, password: hashPassword, name });
     // console.log(user);
 
     // Response
@@ -30,13 +38,6 @@ export const signup = async (req, res, next) => {
       user,
     });
   } catch (error) {
-    if (error.keyPattern.email) {
-      return res.json({
-        success: false,
-        message: 'Email must be unique!',
-      });
-    }
-
     return res.json({
       success: false,
       error,
@@ -48,15 +49,6 @@ export const login = async (req, res, next) => {
   // data
   const { email, password } = req.body;
 
-  // query
-  // const user = await User.findOne({ email, password });
-
-  // if (!user)
-  //   return res.json({
-  //     success: false,
-  //     message: 'Email or password is incorrect!',
-  //   });
-
   // check email
   const user = await User.findOne({ email });
 
@@ -67,18 +59,43 @@ export const login = async (req, res, next) => {
     });
 
   // check password
-  if (user.password !== password)
+  // compareSync(passwordFromUser, HashedPasswordFromDB)
+  const match = bcryptjs.compareSync(password, user.password); // true, false
+
+  if (!match)
     return res.json({
       success: false,
       message: 'Invalid Password!',
     });
 
-  return res.json({ success: true, result: user });
+  // generate token
+  const token = jwt.sign(
+    { _id: user._id, email: user.email },
+    process.env.TOKENKEY,
+    { expiresIn: '1d' }
+  );
+
+  // response
+  return res.json({ success: true, token });
+};
+
+export const profile = async (req, res) => {
+  try {
+    const id = req.user._id;
+    const user = await User.findById(id);
+
+    return res.json({ success: true, results: user });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+      stack: error.stack,
+    });
+  }
 };
 
 export const deleteAccount = async (req, res, next) => {
-  // data
-  const { email } = req.params;
+  const email = req.user.email;
 
   // query
   const user = await User.findOneAndDelete({ email });
