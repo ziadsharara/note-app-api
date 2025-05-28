@@ -13,12 +13,12 @@ const userSchema = new Schema(
       unique: true,
     },
     password: String,
-    notes: [
-      {
-        type: Types.ObjectId,
-        ref: 'Note',
-      },
-    ],
+    // notes: [
+    //   {
+    //     type: Types.ObjectId,
+    //     ref: 'Note',
+    //   },
+    // ],
   },
   {
     timestamps: true,
